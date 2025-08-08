@@ -3,7 +3,9 @@ kind: Template
 metadata:
   name: confluence-to-markdown
   title: Confluence to Markdown
-  description: Converts a single Confluence doc to Markdown and adds it to a repo.
+  description: Converts a single Confluence doc to Markdown and adds it to a repo.  tags:
+    - recommended
+    - react
 spec:
   owner: my-team@example.com
   type: service
@@ -20,7 +22,8 @@ spec:
         repoUrl:
           type: string
           title: GitHub Repo for mkdocs.yml
-  steps:
+  
+ steps:
     - id: create-docs
       name: Get Markdown
       action: confluence:transform:markdown
@@ -35,3 +38,10 @@ spec:
         branchName: confluence-to-markdown
         title: Confluence to Markdown
         description: PR for converting Confluence page to mkdocs
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
