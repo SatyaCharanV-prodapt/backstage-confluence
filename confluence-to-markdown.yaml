@@ -49,9 +49,9 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: react-ssr-template
-  title: React SSR Template
-  description: Create a website powered with Next.js
+  name: confluence-to-markdown
+  title: Confluence to Markdown
+  description: Converts a single Confluence doc to Markdown and adds it to a repo.
   tags:
     - recommended
     - react
