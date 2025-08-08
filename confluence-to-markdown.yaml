@@ -1,43 +1,126 @@
+# apiVersion: scaffolder.backstage.io/v1beta3
+# kind: Template
+# metadata:
+#   name: confluence-to-markdown
+#   title: Confluence to Markdown
+#   description: Converts a single Confluence doc to Markdown and adds it to a repo.  tags:
+#     - recommended
+#     - react
+# spec:
+#   owner: my-team@example.com
+#   type: service
+#   parameters:
+#     - title: Confluence and Github Repo Information
+#       properties:
+#         confluenceUrls:
+#           type: array
+#           description: URLs of Confluence docs
+#           items:
+#             type: string
+#           minItems: 1
+#           maxItems: 5
+#         repoUrl:
+#           type: string
+#           title: GitHub Repo for mkdocs.yml
+  
+#  steps:
+#     - id: create-docs
+#       name: Get Markdown
+#       action: confluence:transform:markdown
+#       input:
+#         confluenceUrls: ${{ parameters.confluenceUrls }}
+#         repoUrl: ${{ parameters.repoUrl }}
+#     - id: publish
+#       name: Publish PR to GitHub
+#       action: publish:github:pull-request
+#       input:
+#         repoUrl: <GITHUB_BASE_URL>
+#         branchName: confluence-to-markdown
+#         title: Confluence to Markdown
+#         description: PR for converting Confluence page to mkdocs
+#   output:
+#     links:
+#       - title: Repository
+#         url: ${{ steps.publish.output.remoteUrl }}
+#       - title: Open in catalog
+#         icon: catalog
+#         entityRef: ${{ steps.register.output.entityRef }}
+
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: confluence-to-markdown
-  title: Confluence to Markdown
-  description: Converts a single Confluence doc to Markdown and adds it to a repo.  tags:
+  name: react-ssr-template
+  title: React SSR Template
+  description: Create a website powered with Next.js
+  tags:
     - recommended
     - react
 spec:
-  owner: my-team@example.com
-  type: service
+  owner: web@example.com
+  type: website
   parameters:
-    - title: Confluence and Github Repo Information
+    - title: Provide some simple information
+      required:
+        - component_id
+        - owner
       properties:
-        confluenceUrls:
-          type: array
-          description: URLs of Confluence docs
-          items:
-            type: string
-          minItems: 1
-          maxItems: 5
-        repoUrl:
+        component_id:
+          title: Name
           type: string
-          title: GitHub Repo for mkdocs.yml
-  
- steps:
-    - id: create-docs
-      name: Get Markdown
-      action: confluence:transform:markdown
+          description: Unique name of the component
+          ui:field: EntityNamePicker
+        description:
+          title: Description
+          type: string
+          description: Help others understand what this website is for.
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+  steps:
+    - id: template
+      name: Fetch Skeleton + Template
+      action: fetch:template
       input:
-        confluenceUrls: ${{ parameters.confluenceUrls }}
-        repoUrl: ${{ parameters.repoUrl }}
+        url: ./skeleton
+        copyWithoutRender:
+          - .github/workflows/*
+        values:
+          component_id: ${{ parameters.component_id }}
+          description: ${{ parameters.description }}
+          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+          owner: ${{ parameters.owner }}
+
     - id: publish
-      name: Publish PR to GitHub
-      action: publish:github:pull-request
+      name: Publish
+      action: publish:github
       input:
-        repoUrl: <GITHUB_BASE_URL>
-        branchName: confluence-to-markdown
-        title: Confluence to Markdown
-        description: PR for converting Confluence page to mkdocs
+        allowedHosts: ["github.com"]
+        description: This is ${{ parameters.component_id }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: "/catalog-info.yaml"
+
   output:
     links:
       - title: Repository
